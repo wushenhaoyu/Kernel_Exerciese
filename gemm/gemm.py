@@ -62,8 +62,7 @@ def test_gemm_functions(M: int, N: int, K: int):
     A_cpu = A.cpu()
     B_cpu = B.cpu()
     C_cpu = torch.mm(A_cpu, B_cpu)
-    run_benchmark(lambda A, B, C, M, N, K: lib.gemm(A, B, C, M, N, K), A_cpu, B_cpu, "cpu", warmup=10, iters=1000)
-
+    #run_benchmark(lambda A, B, C, M, N, K: lib.gemm(A, B, C, M, N, K), A_cpu, B_cpu, "cpu", warmup=0, iters=1)
 
     print("Testing GEMM v1...")
     run_benchmark(lib.gemm_v1, A, B, "gemm_v1", warmup=10, iters=1000)
@@ -78,9 +77,16 @@ def test_gemm_functions(M: int, N: int, K: int):
     lib.gemm_v1(A, B, C_gpu_v1, M, N, K)
     lib.gemm_v2(A, B, C_gpu_v2, M, N, K)
     lib.gemm_v3(A, B, C_gpu_v3, M, N, K)
-    #assert torch.allclose(C_cpu, C_gpu_v1.cpu(), atol=1e-5), "gemm_v1 result is incorrect"
-    #assert torch.allclose(C_cpu, C_gpu_v2.cpu(), atol=1e-5), "gemm_v2 result is incorrect"
-    #assert torch.allclose(C_cpu, C_gpu_v3.cpu(), atol=1e-5), "gemm_v3 result is incorrect"
+    C_gpu_v1 = C_gpu_v1.cpu()
+    C_gpu_v2 = C_gpu_v2.cpu()
+    C_gpu_v3 = C_gpu_v3.cpu()
+    #print("cpu:", C_cpu)
+    #print("gemm_v1:", C_gpu_v1)
+    #print("gemm_v2:", C_gpu_v2)
+    #print("gemm_v3:", C_gpu_v3)
+    assert torch.allclose(C_cpu, C_gpu_v1.cpu(), atol=1e-3), "gemm_v1 result is incorrect"
+    assert torch.allclose(C_cpu, C_gpu_v2.cpu(), atol=1e-3), "gemm_v2 result is incorrect"
+    assert torch.allclose(C_cpu, C_gpu_v3.cpu(), atol=1e-3), "gemm_v3 result is incorrect"
 
 if __name__ == "__main__":
     M, N, K = 1024, 1024, 1024

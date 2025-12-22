@@ -67,17 +67,17 @@ __global__ void gemm_kernel_v2(float * __restrict__ A, float * __restrict__ B, f
         }
 
         __syncthreads();
+    }
 
-        for(int i = 0; i < TM; i++)
+    for(int i = 0; i < TM; i++)
+    {
+        for(int j = 0; j < TN; j++)
         {
-            for(int j = 0; j < TN; j++)
+            int c_global_x = by * BN + tx * TN + j;
+            int c_global_y = bx * BM + ty * TM + i;
+            if(c_global_x < N && c_global_y < M)
             {
-                int c_global_x = by * BN + tx * TN + j;
-                int c_global_y = bx * BM + ty * TM + i;
-                if(c_global_x < N && c_global_y < M)
-                {
-                    C[c_global_y * N + c_global_x] = c[i][j];
-                }
+                C[c_global_y * N + c_global_x] = c[i][j];
             }
         }
     }
@@ -115,8 +115,8 @@ __global__ void gemm_kernel_v3(float * __restrict__ A, float * __restrict__ B, f
     int b_share_x = (tid & 31) << 2;
     int b_share_y = tid >> 5;
 
-    int a_global_y = bx * BM + a_share_y;
-    int b_global_x = by * BN + b_share_x;
+    int a_global_y = by * BM + a_share_y;
+    int b_global_x = bx * BN + b_share_x;
 
     for(int bk = 0; bk < (K + BK - 1 ) / BK ; bk++)
     {
@@ -146,7 +146,9 @@ __global__ void gemm_kernel_v3(float * __restrict__ A, float * __restrict__ B, f
 
         __syncthreads();
 
-        #pragma unroll
+    }
+
+            #pragma unroll
         for (int i = 0; i < TM / 2; i++) {
             int c_global_y = by * BM + ty * TM / 2 + i;
             int c_global_x = bx * BN + tx * TN / 2;
@@ -163,7 +165,6 @@ __global__ void gemm_kernel_v3(float * __restrict__ A, float * __restrict__ B, f
             FLOAT4(C[c_global_addr]) = FLOAT4(c[i + TM / 2][0]);
             FLOAT4(C[c_global_addr + BN / 2]) = FLOAT4(c[i + TM / 2][4]);
         }
-    }
 }
 
 void gemm(torch::Tensor A, torch::Tensor B, torch::Tensor C, int M, int N, int K) {
