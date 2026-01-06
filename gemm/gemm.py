@@ -2,7 +2,6 @@ import time
 from typing import Optional, Callable
 import torch
 from torch.utils.cpp_extension import load
-# 加载编译好的 CUDA 扩展
 lib = load(
     name="gemm_lib",
     sources=["gemm.cu"],
